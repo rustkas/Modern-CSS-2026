@@ -506,9 +506,15 @@ Container Queries → делают компонент адаптивным
 
 ### Пример с Tailwind
 
-```css
-@import "tailwind.css" layer(tailwind);
+> **Актуально для Tailwind CSS v4** (текущая мажорная версия на 2026 год). Начиная с этой версии Tailwind сам построен на нативных Cascade Layers и подключается одной строкой, а не через отдельные директивы `@tailwind base/components/utilities` из версии 3:
 
+```css
+/* Tailwind v4 сам объявляет и заполняет свои слои: 
+   theme, base, components, utilities */
+@import "tailwindcss";
+
+/* Наши собственные компоненты — в отдельном слое проекта,
+   объявленном после слоёв Tailwind, чтобы предсказуемо их переопределять */
 @layer components {
   .btn {
     @apply px-4 py-2 rounded font-medium;
@@ -525,19 +531,29 @@ Container Queries → делают компонент адаптивным
 }
 ```
 
-### Пример с Material Design
+Если нужен более тонкий контроль — например, встроить Tailwind в проект с собственной многослойной архитектурой из раздела 18.2 — Tailwind v4 позволяет импортировать свои части по отдельности, явно указывая слой для каждой:
 
 ```css
-@import "material-components.css" layer(material);
+@layer reset, tailwind-theme, tokens, base, tailwind-utilities, components, overrides;
+
+@import "tailwindcss/theme.css" layer(tailwind-theme);
+@import "tailwindcss/utilities.css" layer(tailwind-utilities);
+
+@layer tokens {
+  :root {
+    --color-primary: oklch(65% 0.22 255);
+  }
+}
 
 @layer components {
-  .custom-button {
-    /* Переопределяем Material-кнопку */
-    border-radius: var(--radius-lg);
-    font-weight: 700;
+  .btn {
+    background: var(--color-primary);
+    color: white;
   }
 }
 ```
+
+Такой подход раскрывает главное преимущество нативных слоёв: поскольку с версии 4 Tailwind сам генерирует настоящие CSS `@layer`-блоки (а не собственную, изолированную от остального каскада систему приоритетов, как в Tailwind v3), его слои становятся полноправной частью общей архитектуры проекта — их можно переставлять, комбинировать с `tokens`, `components` и `overrides` проекта и предсказуемо переопределять простыми селекторами, без `!important` и без борьбы со специфичностью.
 
 ---
 
