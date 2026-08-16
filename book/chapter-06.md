@@ -1317,7 +1317,7 @@ Custom Properties — настройка компонентов
 
 ---
 
-## 6.11 Progressive Enhancement
+## 6.11 Progressive Enhancement *(добавлено уточнение про gap)*
 
 ### Flexbox — часть Baseline
 
@@ -1329,6 +1329,8 @@ Firefox: 28+
 Safari: 9+
 Edge: 12+
 ```
+
+> **Уточнение:** сам Flexbox — одна из самых давних и стабильных частей современного CSS, полностью в статусе Baseline Widely available. Однако свойство `gap` внутри flex-контейнеров пришло в браузеры позже, чем сам Flexbox: в Grid `gap` поддерживался с первых реализаций, а во Flexbox добавлен заметно позднее (последним его реализовал Safari). Сегодня `gap` во Flexbox тоже входит в Baseline Widely available, поэтому фича-детект через `@supports (gap: 10px)`, показанный ниже, на практике уже не обязателен для большинства проектов — но он остаётся хорошим примером паттерна прогрессивного улучшения и полезен для проектов с расширенной поддержкой старых браузеров.
 
 ### Проверка современных возможностей
 
@@ -1364,31 +1366,6 @@ Edge: 12+
 @supports (container-type: inline-size) {
   .card-container {
     container-type: inline-size;
-  }
-}
-```
-
-### Стратегия fallback
-
-```css
-/* 1. Базовый макет — работает везде */
-.card {
-  display: block;
-  padding: var(--space-md);
-}
-
-/* 2. Улучшение для современных браузеров */
-@supports (display: flex) {
-  .card {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
-/* 3. Дальнейшее улучшение */
-@supports (gap: 10px) {
-  .card {
-    gap: var(--space-sm);
   }
 }
 ```
