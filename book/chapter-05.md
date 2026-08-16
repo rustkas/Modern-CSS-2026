@@ -889,17 +889,20 @@ for (let i = 0; i < 100; i++) {
 
 ### Gap Decorations
 
-Украшения промежутков между колонками:
+Украшения промежутков между колонками.
+
+> **Статус поддержки:** Gap Decorations — на данный момент **Chromium-only** возможность (Chrome и Edge, начиная с версии 149, июнь 2026 года). Ни Firefox, ни Safari её пока не реализуют. Спецификация расширяет уже существующее свойство `column-rule` (ранее работавшее только в многоколоночной вёрстке) и добавляет парное свойство `row-rule` для горизонтальных промежутков.
 
 ```css
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  column-rule: 2px solid var(--border-color);
-  column-rule-style: dashed;
+  column-rule: 2px dashed var(--border-color);
 }
 ```
+
+Поскольку в браузерах без поддержки декорации гэпов просто не отображаются (макет при этом не ломается — пустые промежутки остаются пустыми), эту возможность можно применять как чистое прогрессивное улучшение, без обязательного `@supports`-фолбэка.
 
 ### Grid Lanes
 
@@ -916,13 +919,15 @@ for (let i = 0; i < 100; i++) {
 }
 ```
 
-### Masonry (экспериментально)
+### Masonry *(нативный Masonry-layout)*
+
+> **Статус поддержки:** нативный Masonry-режим Grid остаётся фрагментированным между браузерами и синтаксисами. Safari реализовал его первым — под названием **Grid Lanes** (`display: grid-lanes` в новой ревизии спецификации). Chrome и Firefox поддержку пока не выпустили в стабильных версиях: обсуждение в CSS Working Group долго шло между синтаксисом `grid-template-rows: masonry` (за него исторически выступали Firefox и Safari) и отдельным `display: masonry` с `masonry-template-tracks` (позиция команды Chrome). Итоговый синтаксис на момент написания книги ещё не полностью устоялся между движками, поэтому при использовании в продакшене нужно закладывать существенный разброс поведения между браузерами, а не просто отсутствие поддержки.
 
 ```css
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  grid-template-rows: masonry; /* Экспериментально */
+  grid-template-rows: masonry; /* Экспериментально; синтаксис ещё не финализирован во всех движках */
 }
 ```
 
@@ -943,227 +948,29 @@ for (let i = 0; i < 100; i++) {
 }
 ```
 
----
+Учитывая, что финальный синтаксис Masonry ещё может измениться, для продакшен-проектов в 2026 году разумнее относиться к этой возможности как к возможности для экспериментов и постепенного тестирования, а не как к готовому к внедрению инструменту — в отличие, например, от Subgrid, который уже полностью стабилен (см. ниже).
 
-## 5.12 Практические архитектурные шаблоны
-
-### Dashboard
-
-```css
-.dashboard {
-  display: grid;
-  grid-template-columns: 200px 1fr 250px;
-  grid-template-rows: auto 1fr auto;
-  grid-template-areas: 
-    "header header header"
-    "sidebar content widgets"
-    "footer footer footer";
-  gap: var(--space-md);
-  min-height: 100vh;
-}
-
-@media (max-width: 1024px) {
-  .dashboard {
-    grid-template-columns: 200px 1fr;
-    grid-template-areas: 
-      "header header"
-      "sidebar content"
-      "widgets widgets"
-      "footer footer";
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard {
-    grid-template-columns: 1fr;
-    grid-template-areas: 
-      "header"
-      "sidebar"
-      "content"
-      "widgets"
-      "footer";
-  }
-}
-```
-
-### Gallery
-
-```css
-.gallery {
-  display: grid;
-  grid-template-columns: 
-    repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--space-md);
-  container-type: inline-size;
-}
-
-.gallery-item {
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-}
-
-.gallery-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.gallery-item:hover img {
-  transform: scale(1.05);
-}
-
-@container (max-width: 500px) {
-  .gallery-item {
-    aspect-ratio: 3 / 2;
-  }
-}
-```
-
-### Cards (с Subgrid)
-
-```css
-/* Родительская сетка */
-.card-grid {
-  display: grid;
-  grid-template-columns: 
-    repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-lg);
-}
-
-/* Каждая карточка — Subgrid */
-.card {
-  display: grid;
-  grid-template-rows: subgrid;
-  grid-row: span 3;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-}
-
-.card-image {
-  grid-row: 1 / 2;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.card-title {
-  grid-row: 2 / 3;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-}
-
-.card-description {
-  grid-row: 3 / 4;
-  color: var(--color-text-secondary);
-}
-```
-
-### Admin Panel
-
-```css
-.admin-panel {
-  display: grid;
-  grid-template-columns: 200px 1fr 250px;
-  gap: var(--space-md);
-  padding: var(--space-lg);
-  min-height: 100vh;
-}
-
-/* Вложенная сетка для содержимого */
-.content-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-md);
-  container-type: inline-size;
-}
-
-@container (max-width: 500px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-}
-```
-
-### Landing Page
-
-```css
-.landing {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-  min-height: 100vh;
-}
-
-.hero {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-xl);
-  padding: var(--space-xl);
-  min-height: 80vh;
-  align-content: center;
-}
-
-.features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--space-lg);
-  padding: var(--space-xl);
-}
-
-.pricing {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-lg);
-  padding: var(--space-xl);
-}
-
-.footer {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: var(--space-lg);
-  padding: var(--space-xl);
-}
-
-@media (max-width: 768px) {
-  .hero {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-  
-  .footer {
-    grid-template-columns: 1fr;
-  }
-}
-```
-
----
-
-## 5.13 Progressive Enhancement
+## 5.13 Progressive Enhancement *(уточнён статус Subgrid)*
 
 ### Как писать Grid сегодня
 
 **Стратегия Baseline:**
 
 ```text
-Baseline 2026
+Grid Level 1 — Baseline Widely available, поддерживают все браузеры
   ↓
-Grid Level 1 — все поддерживают
+Subgrid (Grid Level 2) — Baseline Widely available с марта 2026 года
   ↓
-Grid Level 2 (Subgrid) — почти все
+Container Queries (размерные) — Baseline Widely available
   ↓
-Container Queries — почти все
+Style Queries — Limited availability (пока без Firefox)
   ↓
-Masonry — экспериментально
+Gap Decorations — Limited availability (только Chromium)
+  ↓
+Masonry / Grid Lanes — экспериментально, синтаксис не финализирован
 ```
+
+Subgrid стоит особняком в этом списке: он был реализован во всех основных браузерных движках ещё в 2023 году (Firefox — даже раньше, в 2019-м), и в марте 2026 года официально достиг статуса Baseline Widely available. Это означает, что откладывать использование Subgrid «до полной поддержки» больше нет причин — он готов к использованию в продакшене наравне с самим Grid Level 1.
 
 ### Использование @supports
 
@@ -1175,16 +982,17 @@ Masonry — экспериментально
   gap: var(--space-md);
 }
 
-/* Улучшение для поддерживающих */
+/* Subgrid — можно применять без фича-детекта, но @supports не помешает при поддержке очень старых браузеров */
 @supports (grid-template-columns: subgrid) {
   .card {
     grid-template-columns: subgrid;
   }
 }
 
+/* Masonry — обязательно требует @supports, синтаксис ещё не устоялся */
 @supports (grid-template-rows: masonry) {
   .grid {
-    grid-template-rows: masonry; /* Экспериментально */
+    grid-template-rows: masonry;
   }
 }
 
@@ -1195,39 +1003,6 @@ Masonry — экспериментально
   }
 }
 ```
-
-### Graceful Degradation
-
-```css
-/* 1. Fallback — для старых браузеров */
-.grid {
-  display: flex;
-  flex-wrap: wrap;
-  margin: -0.5rem;
-}
-
-.grid > * {
-  flex: 1 1 250px;
-  margin: 0.5rem;
-}
-
-/* 2. Улучшение — для современных браузеров */
-@supports (display: grid) {
-  .grid {
-    display: grid;
-    grid-template-columns: 
-      repeat(auto-fit, minmax(250px, 1fr));
-    gap: var(--space-md);
-    margin: 0;
-  }
-  
-  .grid > * {
-    flex: none;
-    margin: 0;
-  }
-}
-```
-
 ---
 
 ## 5.14 Итоги главы
