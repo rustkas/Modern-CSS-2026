@@ -337,13 +337,41 @@ my-component::part(button) { ... }
   ↓
 :host { display: block; }
   ↓
-:host-context()
-  ↓
-:host-context(.dark-theme) { ... }
-  ↓
 ::slotted()
   ↓
 ::slotted(.icon) { ... }
+```
+
+> **Отдельно про `:host-context()`:** эта псевдоклассовая функция позволяла заглядывать за пределы Shadow DOM и стилизовать компонент в зависимости от селектора предков хоста (например, `:host-context(.dark-theme)`). Однако сегодня она официально помечена как **deprecated** в спецификации и MDN прямо рекомендует не использовать её в новом коде. Поддержка ограничена Chromium-браузерами: Firefox закрыл соответствующий тикет как «won't fix» ещё несколько лет назад, а инженеры WebKit/Safari принципиально возражают против самой идеи, что стиль компонента должен зависеть от контекста его размещения — считая это архитектурным анти-паттерном, нарушающим изоляцию Shadow DOM.
+>
+> Для той же задачи — адаптации компонента к внешнему контексту (например, к теме) — стоит использовать более надёжные и кросс-браузерные механизмы: наследуемые Custom Properties (тема передаётся через переменную, которая просачивается в Shadow DOM по каскаду наследования) или Container Style Queries (глава 7), которые дают тот же результат стандартным и полностью кросс-браузерным способом.
+
+```css
+/* ❌ Не рекомендуется — Chromium-only, deprecated */
+:host-context(.dark-theme) {
+  background: var(--color-dark-surface);
+}
+
+/* ✅ Рекомендуется — кросс-браузерно, через наследование переменной */
+:host {
+  background: var(--component-surface, var(--color-surface));
+}
+```
+
+```css
+/* Внутри Shadow DOM */
+@layer reset, components;
+
+@layer components {
+  :host {
+    display: block;
+    padding: var(--space-md);
+  }
+  
+  .title {
+    font-size: var(--font-size-xl);
+  }
+}
 ```
 
 ### Пример Web Component
