@@ -449,13 +449,30 @@ Anchor Positioning
   padding: 0;
 }
 
+/* Anchor Positioning требует пары объявлений:
+   имя якоря на элементе-триггере... */
+.trigger {
+  anchor-name: --trigger;
+}
+
+/* ...и ссылку на это имя на позиционируемом элементе */
 .dropdown {
   position: absolute;
   position-anchor: --trigger;
   top: anchor(bottom);
   left: anchor(left);
+  position-try-fallbacks: flip-block;
+}
+
+/* Обязательный сброс: браузер по умолчанию
+   центрирует popover-элементы через margin: auto,
+   что конфликтует с anchor-позиционированием (см. главу 8) */
+[popover] {
+  margin: unset;
 }
 ```
+
+> **Напоминание:** этот фрагмент — сокращённая иллюстрация архитектурного принципа «логика в CSS, а не в JavaScript», а не самостоятельный production-ready сниппет. Полный разбор Anchor Positioning с обработкой крайних случаев (Gotchas: `@position-try`, `popover="hint"`, повторяющиеся компоненты и `anchor-scope`) — в главе 8, раздел 8.5.
 
 **Во многих сценариях это позволяет отказаться от вспомогательных скриптов, оставляя JavaScript только для бизнес-логики приложения** (см. главы 8–17).
 
