@@ -327,6 +327,8 @@ Tooltip, Toast, Progress
 
 ### Диалог (Dialog)
 
+> **Важное уточнение:** нативный элемент `<dialog>`, открытый методом `showModal()`, уже поставляется с собственным оверлеем — псевдоэлементом `::backdrop`, который рендерится браузером в top layer позади диалога и автоматически перекрывает всё остальное содержимое страницы, включая элементы с `position: fixed` и высоким `z-index`. Стилизовать этот оверлей вручную через `inset: 0` и `background` на самом `.dialog` — не ошибка сама по себе, но избыточное дублирование того, что браузер уже делает бесплатно, и это лишает интерфейс части встроенных гарантий (например, `::backdrop` всегда выше любых `position: fixed`-элементов независимо от `z-index`, а самодельный оверлей на `.dialog` подчиняется обычным правилам стекового контекста). Правильный современный подход — стилизовать именно `::backdrop`:
+
 ```css
 @layer components {
   .dialog {
@@ -335,25 +337,23 @@ Tooltip, Toast, Progress
     --dialog-radius: var(--radius-lg);
     --dialog-bg: var(--color-surface);
     
-    /* Layout */
-    position: fixed;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    background: color-mix(in oklch, var(--color-text), transparent 50%);
-    z-index: 1000;
+    /* Стилизация самого <dialog> — только контент, без ручного оверлея */
+    max-width: 500px;
+    width: 100%;
+    padding: var(--dialog-padding);
+    background: var(--dialog-bg);
+    border: none;
+    border-radius: var(--dialog-radius);
+    box-shadow: var(--shadow-xl);
+    
+    /* Нативный оверлей — рендерится браузером в top layer автоматически,
+       появляется только при открытии через showModal() */
+    &::backdrop {
+      background: color-mix(in oklch, var(--color-text), transparent 50%);
+    }
     
     &[open] {
       animation: fade-in 0.3s ease;
-    }
-    
-    .dialog-content {
-      max-width: 500px;
-      width: 100%;
-      padding: var(--dialog-padding);
-      background: var(--dialog-bg);
-      border-radius: var(--dialog-radius);
-      box-shadow: var(--shadow-xl);
     }
     
     /* Анимация */
@@ -377,6 +377,15 @@ Tooltip, Toast, Progress
   }
 }
 ```
+
+```javascript
+// Открытие именно через showModal() — только тогда появляется ::backdrop,
+// работает захват фокуса и закрытие по Esc.
+// dialog.show() открывает немодальный диалог без оверлея и без этих гарантий.
+document.querySelector('.dialog').showModal();
+```
+
+Такой вариант даёт то же самое визуально, но опирается на встроенные гарантии платформы — автоматический top layer, захват фокуса, закрытие по Esc — вместо их ручного воссоздания, что полностью соответствует принципу Progressive Enhancement, о котором книга говорит в главах 1 и 4.
 
 ### Единые принципы для всех компонентов
 
