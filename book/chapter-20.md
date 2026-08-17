@@ -399,9 +399,6 @@ Anchor Positioning
         border-color: color-mix(in oklch, var(--product-accent), white 20%);
       }
       
-      /* View Transition */
-      view-transition-name: product-{id};
-      
       /* Scroll Timeline */
       animation: reveal linear;
       animation-timeline: view();
@@ -445,7 +442,22 @@ Anchor Positioning
     --space-md: 0.5rem;
   }
 }
+
 ```
+
+> **Важное уточнение про `view-transition-name` в динамических списках:** в предыдущей версии примера здесь стояла запись `view-transition-name: product-{id};` — это невалидный CSS. Синтаксис `{id}`-интерполяции в чистых таблицах стилей не существует; у CSS нет встроенного шаблонизатора строк для генерации имён свойств. Уникальное имя для каждой карточки в списке нужно присваивать одним из двух реальных способов:
+>
+> ```css
+> /* Способ 1 — инлайновый стиль, заданный на сервере или через JS */
+> /* <div class="product-card" style="view-transition-name: product-42"> */
+> ```
+>
+> ```javascript
+> // Способ 2 — программно через Typed OM
+> element.style.viewTransitionName = `product-${product.id}`;
+> ```
+>
+> Статический CSS-файл может задать имя перехода только для *единственного*, заранее известного элемента (например, `.product-card.featured { view-transition-name: featured-product; }`) — для генерации уникального имени на каждый элемент динамического списка это всегда делается на уровне разметки или через JavaScript, а не внутри самого правила `@scope`, как показано выше.
 
 **Каждая технология отвечает лишь за собственную область ответственности.**
 
@@ -551,10 +563,19 @@ Cross-document View Transitions
   }
 }
 
-@supports (view-transition: 1) {
-  .card {
-    view-transition-name: card;
+/* ✅ Корректная проверка поддержки самого at-rule @view-transition
+   через функцию at-rule() (см. также главы 3 и 16) */
+@supports at-rule(@view-transition) {
+  @view-transition {
+    navigation: auto;
   }
+}
+
+.card {
+  /* view-transition-name можно установить статически для конкретного,
+     заранее известного элемента; браузеры без поддержки View Transitions
+     просто проигнорируют это свойство */
+  view-transition-name: card;
 }
 
 /* 3. Экспериментальный уровень — только через @supports */
